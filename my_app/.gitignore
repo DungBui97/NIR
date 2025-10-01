@@ -36,7 +36,6 @@ wheels/
 *.ipynb
 
 # Test files
-test_nir_data.csv
 *.log
 
 # Docker
