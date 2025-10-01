@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  nir-api:
+    build:
+      context: ..
+      dockerfile: my_app/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../mo_hinh:/app/mo_hinh:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MODEL_DIR=/app/mo_hinh
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
