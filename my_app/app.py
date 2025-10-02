@@ -53,21 +53,43 @@ for model_key, config in MODEL_CONFIGS.items():
 
 
 def load_csv(content: bytes) -> pd.DataFrame:
-    """Load CSV from bytes"""
+    """
+    Load CSV from bytes.
+    Only supports Hadamard format:
+    - Has header (21 rows metadata)
+    - Row 22 is column names with Wavelength and Absorbance columns (vertical)
+    - Sẽ chuyển đổi từ dạng dọc sang dạng ngang (1 mẫu x N wavelengths)
+    """
+    # Check if this is Hadamard format by looking for the header pattern
+    content_str = content.decode('utf-8', errors='ignore')
+    is_hadamard = 'Method:' in content_str or 'Wavelength (nm)' in content_str
+    
+    if not is_hadamard:
+        raise HTTPException(
+            status_code=400, 
+            detail="File không đúng format Hadamard. Cần có header 'Method:' hoặc 'Wavelength (nm)'"
+        )
+    
+    # Hadamard format: skip 21 header rows (metadata), row 22 is column names
     try:
-        df = pd.read_csv(io.BytesIO(content))
-    except Exception:
-        for sep in [";", "\t"]:
-            try:
-                df = pd.read_csv(io.BytesIO(content), sep=sep)
-                break
-            except Exception:
-                df = None
-        if df is None:
-            raise HTTPException(status_code=400, detail="Không đọc được CSV. Hãy kiểm tra định dạng.")
-    if df.empty:
-        raise HTTPException(status_code=400, detail="File rỗng.")
-    return df
+        df = pd.read_csv(io.BytesIO(content), skiprows=21)
+        
+        # Check if we have the expected columns
+        if 'Absorbance (AU)' in df.columns:
+            # Extract Absorbance column and transpose to horizontal format
+            absorbance_col = df['Absorbance (AU)'].values
+            # Create a single-row dataframe (1 sample with N wavelengths)
+            df_horizontal = pd.DataFrame([absorbance_col])
+            return df_horizontal
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Không tìm thấy cột 'Absorbance (AU)' trong file Hadamard. Các cột khả dụng: {df.columns.tolist()}"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Lỗi đọc file Hadamard: {str(e)}")
 
 
 def preprocess_nir(X_raw: np.ndarray, kept_indices: Optional[np.ndarray] = None) -> np.ndarray:
