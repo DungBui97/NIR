@@ -1,32 +1,104 @@
-# NIR Spectroscopy Analysis - PLS Models
+# NIR Spectroscopy Analysis - PLS Models & Inference API
 
 This repository contains code and models for Near-Infrared (NIR) spectroscopy analysis using Partial Least Squares (PLS) regression to predict various quality parameters of pepper samples.
 
-## Project Structure
+## 🚀 Quick Start
+
+### Option 1: Use the API (Recommended)
+```bash
+# Start the API server
+cd my_app
+./start_api.sh
+
+# Or manually:
+cd my_app
+pip install -r requirements.txt
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
+```
+
+Then access:
+- API: http://localhost:8000
+- Swagger UI: http://localhost:8000/docs
+
+### Option 2: Use Jupyter Notebook
+```bash
+jupyter notebook Code.ipynb
+```
+
+## 📁 Project Structure
 
 ```
-├── Code.ipynb                    # Main analysis notebook
-├── mean_by_ma_mau.csv           # Input data file (averaged by sample code)
-├── mo_hinh/                     # Folder containing trained models
-│   ├── do_am.pkl               # Moisture content model (10-13%)
-│   ├── tro_tong.pkl            # Total ash content model (3-7%)
-│   ├── tro_khong_tan.pkl       # Acid-insoluble ash model (0.5-1.5%)
-│   └── piperin.pkl             # Piperine content model (1-4%)
-│   └── tinh_dau.pkl             # Tinh_dau (2-4%)
-└── README.md                   # This file
+├── my_app/                     # API Application
+│   ├── app.py                 # FastAPI application
+│   ├── config.py              # API configuration
+│   ├── test_api.py            # API testing script
+│   ├── start_api.sh           # Startup script
+│   ├── requirements.txt       # Python dependencies
+│   ├── API_README.md          # API documentation
+│   ├── Dockerfile             # Docker configuration
+│   └── docker-compose.yml     # Docker Compose setup
+├── Code.ipynb                 # Main analysis notebook
+├── mean_by_ma_mau.csv        # Input data file
+└── mo_hinh/                   # Trained models directory
+    ├── do_am.pkl             # Moisture content model
+    ├── tro_tong.pkl          # Total ash content model
+    ├── tro_khong_tan.pkl     # Acid-insoluble ash model
+    ├── piperin.pkl           # Piperine content model
+    └── Tinh_dau.pkl          # Essential oil model
 ```
 
 ## Overview
 
 This project uses NIR spectroscopy data to predict quality parameters in pepper samples using PLS regression with variable selection. The analysis includes data preprocessing, model optimization, and result validation.
 
-## Quality Parameters Analyzed
+## 📊 Quality Parameters Analyzed
 
 1. **Độ ẩm (Moisture Content)**: 10-13%
 2. **Tro tổng (Total Ash)**: 3-7%  
 3. **Tro không tan (Acid-insoluble Ash)**: 0.5-1.5%
 4. **Piperin (Piperine Content)**: 2-4%
 5. **Tinh dầu (Essential Oil)**: 1-4%
+
+## 🔬 API Usage
+
+### Predict All Models
+```bash
+curl -X POST "http://localhost:8000/predict/all" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@your_nir_data.csv"
+```
+
+### Predict Single Model
+```bash
+curl -X POST "http://localhost:8000/predict/do_am" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@your_nir_data.csv"
+```
+
+### Test the API
+```bash
+cd my_app
+python test_api.py
+```
+
+See [my_app/API_README.md](my_app/API_README.md) for detailed API documentation.
+
+## 🐳 Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+cd my_app
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
+```
 
 ## Data Source
 
