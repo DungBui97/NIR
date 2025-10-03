@@ -4,13 +4,18 @@ This repository contains code and models for Near-Infrared (NIR) spectroscopy an
 
 ## 🚀 Quick Start
 
-### Option 1: Use the API (Recommended)
+### Option 1: Use the API with Docker (Recommended)
 ```bash
-# Start the API server
+# Start the API with Docker Compose
 cd my_app
-./start_api.sh
+docker-compose up -d
 
-# Or manually:
+# Test the API
+curl -X POST "http://localhost:8000/predict/all" -F "file=@Hadanard1_119012_20221216_094813.csv"
+```
+
+### Option 2: Use the API without Docker
+```bash
 cd my_app
 pip install -r requirements.txt
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
@@ -20,7 +25,7 @@ Then access:
 - API: http://localhost:8000
 - Swagger UI: http://localhost:8000/docs
 
-### Option 2: Use Jupyter Notebook
+### Option 3: Use Jupyter Notebook
 ```bash
 jupyter notebook Code.ipynb
 ```
@@ -55,16 +60,11 @@ This project uses NIR spectroscopy data to predict quality parameters in pepper 
 
 ## 📊 Quality Parameters Analyzed
 
-### Chemical Parameters
 1. **Độ ẩm (Moisture Content)**: 10-13%
 2. **Tro tổng (Total Ash)**: 3-7%  
 3. **Tro không tan (Acid-insoluble Ash)**: 0.5-1.5%
 4. **Piperin (Piperine Content)**: 2-4%
 5. **Tinh dầu (Essential Oil)**: 1-4%
-
-### Origin Classification
-- **3 Main Regions**: Quảng Trị, Đắk Lắk, Gia Lai
-- **Model**: Random Forest with SMOTE (95.17% accuracy)
 
 ## 🔬 API Usage
 
@@ -128,19 +128,6 @@ Available models: `do_am`, `tro_tong`, `tro_khong_tan`, `piperin`, `Tinh_dau`
 cd my_app
 python test_api.py
 ```
-
-## 🏆 Model Performance
-
-### Origin Classification (Random Forest with SMOTE)
-- **Overall Accuracy**: 95.17%
-- **Quảng Trị**: 96.31% accuracy (11,788 samples)
-- **Đắk Lắk**: 94.32% accuracy (5,708 samples)
-- **Gia Lai**: 92.84% accuracy (3,730 samples)
-
-### Standards Classification
-- **TCVN Standards**: Automatic classification based on 4 criteria
-- **ESA Standards**: Automatic classification based on 4 criteria
-- **Physical Quality**: 3-tier grading system (Loại 1, 2, 3)
 
 See [my_app/API_README.md](my_app/API_README.md) for detailed API documentation.
 
