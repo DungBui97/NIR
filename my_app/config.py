@@ -19,7 +19,7 @@ MODEL_CONFIGS = {
         "unit": "%",
         "description": "Độ ẩm của mẫu hạt tiêu",
         "range_low": 10.0,
-        "range_high": 13.0
+        "range_high": 12.5
     },
     "tro_tong": {
         "path": os.path.join(MODEL_DIR, "tro_tong.pkl"),
@@ -45,17 +45,25 @@ MODEL_CONFIGS = {
         "name": "Piperin",
         "unit": "%",
         "description": "Hàm lượng piperin (chất cay)",
-        "range_low": 2.0,
-        "range_high": 4.0
+        "range_low": 3.5,
+        "range_high": 5.0
     },
     "Tinh_dau": {
         "path": os.path.join(MODEL_DIR, "Tinh_dau.pkl"),
         "kept_indices_path": "indices/Tinh_dau_indices.csv",
         "name": "Tinh dầu",
-        "unit": "%",
+        "unit": "ml/100g",
         "description": "Hàm lượng tinh dầu",
         "range_low": 1.0,
         "range_high": 4.0
+    },
+    "origin_classification": {
+        "path": os.path.join(MODEL_DIR, "random_forest_3regions_smote.pkl"),
+        "label_encoder_path": os.path.join(MODEL_DIR, "label_encoder_3regions_smote.pkl"),
+        "name": "Vùng miền",
+        "unit": "",
+        "description": "Phân loại vùng miền trồng tiêu (3 vùng: Quảng Trị, Đắk Lắk, Gia Lai) - Random Forest với SMOTE",
+        "type": "classification"
     }
 }
 
@@ -71,15 +79,28 @@ API_DESCRIPTION = """
 API để dự đoán các chỉ tiêu chất lượng hạt tiêu từ phổ NIR.
 
 ## Features:
-- Dự đoán 5 chỉ tiêu: Độ ẩm, Tro tổng, Tro không tan, Piperin, Tinh dầu
-- Preprocessing tự động với Savitzky-Golay filter
+- Dự đoán 5 chỉ tiêu chất lượng: Độ ẩm, Tro tổng, Tro không tan, Piperin, Tinh dầu
+- Phân loại vùng miền trồng tiêu
+- **Phân loại TCVN tự động**: Xác định loại tiêu (I, II, III) theo tiêu chuẩn TCVN
+- Preprocessing tự động với Savitzky-Golay filter cho regression
 - Feature selection tùy chỉnh cho từng model
 - Support nhiều định dạng CSV
 
 ## Models:
+### Regression Models:
 - **do_am**: Độ ẩm (%)
 - **tro_tong**: Tro tổng (%)
 - **tro_khong_tan**: Tro không tan (%)
 - **piperin**: Piperin (%)
 - **Tinh_dau**: Tinh dầu (%)
+
+### Classification Models:
+- **origin_classification**: Vùng miền (BRVT, Dak_Lak, Dak_Nong, Dong_Nai, Gia_Lai, Quang_Tri)
+
+## TCVN Classification:
+Tự động phân loại theo tiêu chuẩn TCVN dựa trên 5 chỉ tiêu:
+- **Loại I**: Cao cấp nhất
+- **Loại II**: Trung bình khá  
+- **Loại III**: Đạt chuẩn tối thiểu
+- **Không đạt chuẩn**: Không đạt tiêu chuẩn TCVN
 """

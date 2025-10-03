@@ -29,10 +29,21 @@ class RangeRandomizerRegressor(BaseEstimator, RegressorMixin):
         # mask ngoài [low, high]
         mask = (y < self.low) | (y > self.high)
         if np.any(mask):
+            # Tạo seed động dựa trên giá trị dự đoán để đảm bảo:
+            # 1. Cùng input → cùng output (reproducible)
+            # 2. Khác input → khác output (không trùng lặp giữa các mẫu)
+            seed = int(np.abs(y[mask]).sum() * 1000000) % (2**31 - 1)
+            
+            # Nếu có random_state, mix với seed động để tăng tính ngẫu nhiên
+            if self.random_state is not None:
+                seed = (seed + self.random_state) % (2**31 - 1)
+            
+            rng = np.random.default_rng(seed)
+            
             # sinh ngẫu nhiên trong (low, high) (loại trừ biên)
             lo = np.nextafter(self.low, self.high)
             hi = np.nextafter(self.high, self.low)
-            y_rand = self._rng.uniform(lo, hi, size=mask.sum())
+            y_rand = rng.uniform(lo, hi, size=mask.sum())
             y_adj = y.copy()
             y_adj[mask] = y_rand
         else:
