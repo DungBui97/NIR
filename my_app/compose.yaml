@@ -1,0 +1,30 @@
+version: '3.8'
+
+# NIR API Service with API Key Authentication
+# Create .env file with API_KEY=your-secret-key for production
+services:
+  nir-api:
+    build:
+      context: ..
+      dockerfile: my_app/Dockerfile
+      target: production
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}"
+    volumes:
+      - ../mo_hinh:/app/mo_hinh:ro
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MODEL_DIR=/app/mo_hinh
+      - API_KEY=${API_KEY:-this-is-the-best-secret-api-key-ever}
+    restart: unless-stopped
+    # Health check is now handled in Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true

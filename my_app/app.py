@@ -1,10 +1,11 @@
 import io
 import sys
+import os
 import joblib
 import numpy as np
 import pandas as pd
 from scipy.signal import savgol_filter
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Header
 from fastapi.responses import JSONResponse
 from typing import Dict, Optional
 
@@ -24,6 +25,27 @@ from config import (
     API_VERSION,
     API_DESCRIPTION
 )
+
+# Get API_KEY from environment
+API_KEY = os.getenv("API_KEY", "this-is-the-best-secret-api-key-ever")
+
+def verify_api_key(x_api_key: str = Header(None)):
+    """
+    Verify API key for service-to-service communication
+    """
+    if not x_api_key:
+        raise HTTPException(
+            status_code=401, 
+            detail="API key required. Please provide X-API-Key header."
+        )
+    
+    if x_api_key != API_KEY:
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid API key."
+        )
+    
+    return x_api_key
 
 app = FastAPI(
     title=API_TITLE, 
@@ -387,12 +409,17 @@ async def root():
         ],
         "endpoints": {
             "/": "API information",
-            "/predict/all": "Predict all models at once",
-            "/predict/standards": "Predict TCVN & ESA standards only",
-            "/predict/{model_key}": "Predict single model",
-            "/classify/pepper_quality": "Classify pepper quality (Loại 1, 2, 3) based on 4 physical criteria",
+            "/predict/all": "Predict all models at once (requires API key)",
+            "/predict/standards": "Predict TCVN & ESA standards only (requires API key)",
+            "/predict/{model_key}": "Predict single model (requires API key)",
+            "/classify/pepper_quality": "Classify pepper quality (Loại 1, 2, 3) based on 4 physical criteria (requires API key)",
             "/docs": "Swagger UI documentation",
             "/health": "Health check"
+        },
+        "authentication": {
+            "type": "API Key",
+            "header": "X-API-Key",
+            "description": "All prediction endpoints require X-API-Key header for service-to-service communication"
         },
         "preprocessing": {
             "savgol_window": SAVGOL_WINDOW,
@@ -418,7 +445,7 @@ async def health_check():
 
 
 @app.post("/predict/all")
-async def predict_all(file: UploadFile = File(...)):
+async def predict_all(file: UploadFile = File(...), api_key: str = Depends(verify_api_key)):
     """
     Predict all models at once and include TCVN classification.
     Input: CSV file with NIR spectra (each row is a sample)
@@ -508,7 +535,7 @@ async def predict_all(file: UploadFile = File(...)):
 
 
 @app.post("/predict/standards")
-async def predict_standards(file: UploadFile = File(...)):
+async def predict_standards(file: UploadFile = File(...), api_key: str = Depends(verify_api_key)):
     """
     Predict chemical standards (TCVN & ESA) only.
     Input: CSV file with NIR spectra
@@ -653,7 +680,7 @@ async def predict_standards(file: UploadFile = File(...)):
 
 
 @app.post("/predict/{model_key}")
-async def predict_model(model_key: str, file: UploadFile = File(...)):
+async def predict_model(model_key: str, file: UploadFile = File(...), api_key: str = Depends(verify_api_key)):
     """
     Predict using a single model.
     Input: CSV file with NIR spectra
@@ -693,7 +720,8 @@ async def classify_pepper_quality_endpoint(
     tap_chat_la: float,
     hat_lep: float,
     hat_dau_dinh_vo: float,
-    khoi_luong_theo_the_tich: float
+    khoi_luong_theo_the_tich: float,
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Phân loại chất lượng hạt tiêu đen theo 4 chỉ tiêu vật lý

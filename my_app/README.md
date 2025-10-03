@@ -69,20 +69,30 @@ curl http://localhost:8000/health
 
 ### Predict All Models
 ```bash
-curl -X POST "http://localhost:8000/predict/all" -F "file=@test_nir_data.csv"
+curl -X POST "http://localhost:8000/predict/all" \
+  -H "X-API-Key: your-secret-api-key-here" \
+  -F "file=@test_nir_data.csv"
 ```
 
 ### Predict Single Model
 ```bash
-curl -X POST "http://localhost:8000/predict/do_am" -F "file=@test_nir_data.csv"
+curl -X POST "http://localhost:8000/predict/do_am" \
+  -H "X-API-Key: your-secret-api-key-here" \
+  -F "file=@test_nir_data.csv"
 ```
 
 ### Python
 ```python
 import requests
 
+headers = {"X-API-Key": "your-secret-api-key-here"}
+
 with open('test_nir_data.csv', 'rb') as f:
-    response = requests.post('http://localhost:8000/predict/all', files={'file': f})
+    response = requests.post(
+        'http://localhost:8000/predict/all', 
+        files={'file': f},
+        headers=headers
+    )
     print(response.json())
 ```
 
@@ -127,6 +137,21 @@ CSV → Numpy → Savgol Filter (15,2,2) → Feature Selection → PLS Model →
 
 ## 🛠️ Configuration
 
+### API Key Setup
+1. **Create `.env` file** in `my_app/` directory:
+```bash
+# .env
+API_KEY=this-is-the-best-secret-api-key-ever
+```
+
+2. **Or set environment variable**:
+```bash
+export API_KEY="this-is-the-best-secret-api-key-ever"
+```
+
+3. **For Docker Compose**, the API key is automatically loaded from `.env` file.
+
+### Model Configuration
 Edit `config.py` to modify:
 - Model paths and settings
 - Preprocessing parameters
