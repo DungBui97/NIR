@@ -1,6 +1,11 @@
 # Ignore specific folders
 Dak_lak/
 s/
+model_orgin/
+11.csv
+hadanard/
+mo_hinh_mhinhtest/
+mo_hinh/mhinhtest/
 
 # Ignore archive files
 *.rar

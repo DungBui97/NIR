@@ -39,12 +39,14 @@ jupyter notebook Code.ipynb
 │   └── docker-compose.yml     # Docker Compose setup
 ├── Code.ipynb                 # Main analysis notebook
 ├── mean_by_ma_mau.csv        # Input data file
-└── mo_hinh/                   # Trained models directory
+├── mo_hinh/                   # Trained models directory
     ├── do_am.pkl             # Moisture content model
     ├── tro_tong.pkl          # Total ash content model
     ├── tro_khong_tan.pkl     # Acid-insoluble ash model
     ├── piperin.pkl           # Piperine content model
-    └── Tinh_dau.pkl          # Essential oil model
+    ├── Tinh_dau.pkl          # Essential oil model
+    ├── random_forest_3regions_smote.pkl  # Origin classification model
+    └── label_encoder_3regions_smote.pkl  # Label encoder for regions
 ```
 
 ## Overview
@@ -53,33 +55,92 @@ This project uses NIR spectroscopy data to predict quality parameters in pepper 
 
 ## 📊 Quality Parameters Analyzed
 
+### Chemical Parameters
 1. **Độ ẩm (Moisture Content)**: 10-13%
 2. **Tro tổng (Total Ash)**: 3-7%  
 3. **Tro không tan (Acid-insoluble Ash)**: 0.5-1.5%
 4. **Piperin (Piperine Content)**: 2-4%
 5. **Tinh dầu (Essential Oil)**: 1-4%
 
+### Origin Classification
+- **3 Main Regions**: Quảng Trị, Đắk Lắk, Gia Lai
+- **Model**: Random Forest with SMOTE (95.17% accuracy)
+
 ## 🔬 API Usage
 
-### Predict All Models
+### 1. Predict All Parameters (with Standards Classification)
 ```bash
 curl -X POST "http://localhost:8000/predict/all" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@your_nir_data.csv"
 ```
 
-### Predict Single Model
+Response includes:
+- All 5 chemical parameters
+- Origin classification (3 regions)
+- TCVN standard classification
+- ESA standard classification
+
+### 2. Predict TCVN & ESA Standards Only
+```bash
+curl -X POST "http://localhost:8000/predict/standards" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@your_nir_data.csv"
+```
+
+Returns:
+- **TCVN Classification**: Based on moisture (≤13%), ash (≤7%), essential oil (≥2.0ml/100g), piperine (≥4%)
+- **ESA Classification**: Based on moisture (≤12%), ash (≤7%), acid-insoluble ash (≤1.5%), essential oil (≥2.0ml/100g)
+
+### 3. Classify Pepper Quality (Physical Standards)
+```bash
+curl -X POST "http://localhost:8000/classify/pepper_quality?tap_chat_la=0.4&hat_lep=5.5&hat_dau_dinh_vo=1.8&khoi_luong_theo_the_tich=560"
+```
+
+Parameters:
+- `tap_chat_la`: Foreign matter (%)
+- `hat_lep`: Light berries (%)
+- `hat_dau_dinh_vo`: Pinheads/broken (%)
+- `khoi_luong_theo_the_tich`: Bulk density (g/l)
+
+Returns classification: **Loại 1**, **Loại 2**, **Loại 3**, or **Không đạt tiêu chuẩn**
+
+### 4. Predict Origin Classification
+```bash
+curl -X POST "http://localhost:8000/predict/origin_classification" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@your_nir_data.csv"
+```
+
+Returns top 3 predictions with confidence scores for regions: Quảng Trị, Đắk Lắk, Gia Lai
+
+### 5. Predict Single Chemical Parameter
 ```bash
 curl -X POST "http://localhost:8000/predict/do_am" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@your_nir_data.csv"
 ```
 
+Available models: `do_am`, `tro_tong`, `tro_khong_tan`, `piperin`, `Tinh_dau`
+
 ### Test the API
 ```bash
 cd my_app
 python test_api.py
 ```
+
+## 🏆 Model Performance
+
+### Origin Classification (Random Forest with SMOTE)
+- **Overall Accuracy**: 95.17%
+- **Quảng Trị**: 96.31% accuracy (11,788 samples)
+- **Đắk Lắk**: 94.32% accuracy (5,708 samples)
+- **Gia Lai**: 92.84% accuracy (3,730 samples)
+
+### Standards Classification
+- **TCVN Standards**: Automatic classification based on 4 criteria
+- **ESA Standards**: Automatic classification based on 4 criteria
+- **Physical Quality**: 3-tier grading system (Loại 1, 2, 3)
 
 See [my_app/API_README.md](my_app/API_README.md) for detailed API documentation.
 
@@ -99,6 +160,19 @@ docker-compose logs -f
 # Stop
 docker-compose down
 ```
+
+## 📋 API Endpoints Summary
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | API information and available models |
+| `/predict/all` | POST | Predict all parameters + standards classification |
+| `/predict/standards` | POST | TCVN & ESA standards classification only |
+| `/predict/origin_classification` | POST | Origin classification (3 regions) |
+| `/predict/{model_key}` | POST | Single parameter prediction |
+| `/classify/pepper_quality` | POST | Physical quality grading (Loại 1, 2, 3) |
+| `/health` | GET | Health check |
+| `/docs` | GET | Interactive API documentation (Swagger UI) |
 
 ## Data Source
 
