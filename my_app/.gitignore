@@ -49,3 +49,11 @@ wheels/
 *.tmp
 *.bak
 *.cache
+
+# Project specific folders
+model_orgin/
+11.csv
+hadanard/
+mhinhtest/
+Hadanard*.csv
+mo_hinh/mhinhtest/
